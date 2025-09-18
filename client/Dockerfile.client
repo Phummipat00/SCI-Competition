@@ -1,0 +1,19 @@
+# ใช้ Node image เป็น base
+FROM node:18
+
+# ตั้ง working directory
+WORKDIR /app
+
+# ✅ คัดลอก package.json และ package-lock.json ก่อน
+COPY package*.json ./
+
+# ✅ ติดตั้ง dependencies
+RUN npm install
+
+# ✅ คัดลอกไฟล์โปรเจกต์อื่น ๆ
+COPY . .
+
+# ถ้ามี command รันเพิ่มเติม เช่น build
+# RUN npm run build
+
+CMD [ "npm","run", "dev"]

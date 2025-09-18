@@ -1,0 +1,34 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+# Ignore all .env files
+.env
+**/.env
+
+# ❗ Allow .env in server/route
+!server/route/.env
+
+
+# React
+build/
+dist/
+.parcel-cache/
+
+# Docker
+!docker-compose.yml
+!Dockerfile*
+!docker-entrypoint.sh
+
+# Database (local testing)
+docker_test_db/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
