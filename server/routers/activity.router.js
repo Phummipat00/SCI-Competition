@@ -6,7 +6,7 @@ import AuthMiddleware from "../middleware/authJwt.js";
 // Create a new activity
 router.post(
   "/",
-  [AuthMiddleware.verifyToken, AuthMiddleware.isAdmin],
+  [AuthMiddleware.verifyToken, AuthMiddleware.isAdmin, AuthMiddleware.isTeacher],
   activityController.createActivity
 );
 
