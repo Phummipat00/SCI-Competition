@@ -12,56 +12,69 @@ const verifyToken = (req, res, next) => {
     if (err) {
       return res.status(401).send({ message: "Unauthorized!" });
     }
-    req.username = decoded.username;
+    req.userId = decoded.id;
     next();
   });
 };
 
 const isAdmin = (req, res, next) => {
-  User.findByPk(req.username).then((user) => {
-    user.getRoles().then((roles) => {
-      for (let i = 0; i < roles.length; i++) {
-        if (roles[i].name === "admin") {
-          next();
-          return;
-        }
-      }
-      return res
-        .status(401)
-        .send({ message: "Unauthorized access, require admin role!" });
-    });
+  try{
+    User.findByPk(req.userId).then((user) => {
+    if(!user){
+      return res.status(404).send({ message:"User not found!"});
+    }
+    //เช็คว่าเป็น admin ไหม
+    if(user.type === "admin"){
+      next();
+      return;
+    }
+    return  res.status(401).send({message:"Unauthorized access, require admin roles"})
   });
-};
-const isModOrAdmin = (req, res, next) => {
-  User.findByPk(req.username).then((user) => {
-    user.getRoles().then((roles) => {
-      for (let i = 0; i < roles.length; i++) {
-        if (roles[i].name === "admin" || roles[i].name === "moderator") {
-          next();
-          return;
-        }
-      }
-      return res
-        .status(401)
-        .send({ message: "Unauthorized access, require admin role!" });
-    });
-  });
-};
-const isManager = (req, res, next) => {
-  User.findByPk(req.username).then((user) => {
-    user.getRoles().then((roles) => {
-      for (let i = 0; i < roles.length; i++) {
-        if (roles[i].name === "manager") {
-          next();
-          return;
-        }
-      }
-      return res
-        .status(401)
-        .send({ message: "Unauthorized access, require manager role!" });
-    });
-  });
+  } catch (error){
+    return res.status(500).send({message:error.message})
+  }
 };
 
-const authJwt = { verifyToken, isAdmin, isModOrAdmin, isManager };
+const isTeacher = (req, res, next) => {
+  try {
+    User.findByPk(req.userId).then((user) => {
+      if (!user) {
+        return res.status(404).send({ message: "User not found!" });
+      }
+      //เช็คว่าเป็น admin ไหม
+      if (user.type === "teacher") {
+        next();
+        return;
+      }
+      return res
+        .status(401)
+        .send({ message: "Unauthorized access, require teacher roles" });
+    });
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+};
+
+const isJudge = (req, res, next) => {
+  try {
+    User.findByPk(req.userId).then((user) => {
+      if (!user) {
+        return res.status(404).send({ message: "User not found!" });
+      }
+      //เช็คว่าเป็น admin ไหม
+      if (user.type === "judge") {
+        next();
+        return;
+      }
+      return res
+        .status(401)
+        .send({ message: "Unauthorized access, require judge roles" });
+    });
+  } catch (error) {
+    return res.status(500).send({ message: error.message });
+  }
+};
+
+
+const authJwt = { verifyToken, isAdmin, isJudge, isTeacher };
 export default authJwt;

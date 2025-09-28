@@ -8,6 +8,7 @@ import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 import Activities from "../pages/Activities";
 import News from "../pages/News";
+import AddActivity from "../pages/AddActivities.jsx";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "activities",
         element: <Activities />,
+      },
+      {
+        path: "add-activities",
+        element: <AddActivity />,
       },
       {
         path: "news",

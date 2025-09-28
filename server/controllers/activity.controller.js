@@ -174,13 +174,19 @@ activityController.updateActivity = async (req, res) => {
         status,
       })
       .then((num) => {
-        if (num[0] === 1) {
+        if (num) {
           console.log("Activity was updated successfully.");
           res.status(200).json(activity);
         } else {
-          console.log(
-            `Cannot update Activity with id=${id}. Maybe Activity was not found or req.body is empty!`
-          );
+          // console.log(
+          //   `Cannot update Activity with id=${id}. Maybe Activity was not found or req.body is empty!`
+          // );
+          res
+            .status(404)
+            .send({
+              message:
+                "Cannot update Activity with id=${id}. Maybe Activity was not found or req.body is empty!",
+            });
         }
       });
   } catch (error) {
@@ -204,7 +210,7 @@ activityController.deleteActivity = async (req, res) => {
       return res.status(404).json({ error: "Activity not found" });
     }
     await activity.destroy();
-    res.status(204).send();
+    res.status(204).send({ message: "delete activity successfully"});
   } catch (error) {
     console.error("Error deleting activity:", error);
     res
