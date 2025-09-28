@@ -19,5 +19,4 @@ const Judge = User.init(
     },
   }
 );
-
 export default Judge;

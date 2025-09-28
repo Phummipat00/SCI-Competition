@@ -1,5 +1,5 @@
-import User from "./user.model.js";
 import { DataTypes } from "sequelize";
+import User from "./user.model.js";
 
 const Teacher = User.init(
   {
@@ -27,5 +27,4 @@ const Teacher = User.init(
     },
   }
 );
-
 export default Teacher;

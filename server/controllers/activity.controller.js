@@ -1,10 +1,7 @@
 import Activity from "../models/activity.model.js";
-import { Op } from "sequelize";
-
-const activityControllers = {};
-
-// ✅ CREATE
-activityControllers.createActivity = async (req, res) => {
+const activityController = {};
+// Create a new activity
+activityController.createActivity = async (req, res) => {
   try {
     const {
       name,
@@ -21,14 +18,34 @@ activityControllers.createActivity = async (req, res) => {
       contact_email,
       status,
     } = req.body;
-
-    const existing = await Activity.findOne({ where: { name } });
-    if (existing) {
+    // Validate required fields
+    if (
+      !name ||
+      !description ||
+      !type ||
+      !level ||
+      !team_size ||
+      !date ||
+      !location ||
+      !reg_open ||
+      !reg_close ||
+      !contact_name ||
+      !contact_phone ||
+      !contact_email
+    ) {
       return res
         .status(400)
-        .send({ message: "Activity name is already existed" });
+        .json({ error: "Please provide all required fields" });
     }
+    // Check for duplicate activity name
+    await Activity.findOne({ where: { name } }).then((activity) => {
+      if (activity) {
+        res.status(400).send({ message: "Activity name is already existed" });
+        return;
+      }
+    });
 
+    // Create the activity
     const newActivity = await Activity.create({
       name,
       description,
@@ -45,97 +62,181 @@ activityControllers.createActivity = async (req, res) => {
       status,
     });
 
-    res
-      .status(201)
-      .json({ message: "กิจกรรมถูกสร้างเรียบร้อยแล้ว", activity: newActivity });
+    res.status(201).json(newActivity);
   } catch (error) {
     console.error("Error creating activity:", error);
-    res.status(500).json({
-      message: "Something went wrong while creating the activity",
-      error: error.message,
-      errors: error.errors || null, // Sequelize จะเก็บ validation errors ตรงนี้
-    });
+    res
+      .status(500)
+      .json({ message: "Something went wrong while creating the activity" });
   }
 };
 
-// ✅ GET ALL
-activityControllers.getAllActivities = async (req, res) => {
+// Get all activities
+activityController.getAllActivities = async (req, res) => {
   try {
     const activities = await Activity.findAll();
     res.status(200).json(activities);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch activities" });
+    console.error("Error fetching activities:", error);
+    res
+      .status(500)
+      .json({ message: "Something went wrong while fetching activities" });
   }
 };
-
-// ✅ GET BY ID
-activityControllers.getActivityById = async (req, res) => {
+// Get activity by ID
+activityController.getActivityById = async (req, res) => {
   try {
     const { id } = req.params;
     const activity = await Activity.findByPk(id);
-    if (!activity)
+    if (!activity) {
       return res.status(404).json({ message: "Activity not found" });
+    }
     res.status(200).json(activity);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch activity" });
+    console.error("Error fetching activity:", error);
+    res.status(500).json({
+      message: "Something went wrong while fetching the activity by ID",
+    });
   }
 };
-
-// ✅ UPDATE
-activityControllers.updateActivity = async (req, res) => {
+// Update activity by ID
+activityController.updateActivity = async (req, res) => {
   try {
     const { id } = req.params;
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({ message: "Activity ID is required" });
+    }
+    // Check if activity exists
     const activity = await Activity.findByPk(id);
-    if (!activity)
+    if (!activity) {
       return res.status(404).json({ message: "Activity not found" });
-
-    if (req.body.name && req.body.name !== activity.name) {
-      const duplicate = await Activity.findOne({
-        where: { name: req.body.name },
-      });
-      if (duplicate)
-        return res
-          .status(400)
-          .send({ message: "Activity name is already existed" });
     }
 
-    await activity.update(req.body);
-    res.status(200).json({ message: "กิจกรรมถูกอัปเดตแล้ว", activity });
+    // Extract fields from request body
+    const {
+      name,
+      description,
+      type,
+      level,
+      team_size,
+      date,
+      location,
+      reg_open,
+      reg_close,
+      contact_name,
+      contact_phone,
+      contact_email,
+      status,
+    } = req.body;
+    // Validate required fields
+    if (
+      !name ||
+      !description ||
+      !type ||
+      !level ||
+      !team_size ||
+      !date ||
+      !location ||
+      !reg_open ||
+      !reg_close ||
+      !contact_name ||
+      !contact_phone ||
+      !contact_email
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Please provide all required fields" });
+    }
+    // Check for duplicate activity name
+    await Activity.findOne({ where: { name } }).then((activity) => {
+      if (activity && activity.id !== parseInt(id)) {
+        res.status(400).send({ message: "Activity name is already existed" });
+        return;
+      }
+    });
+
+    // Update the activity
+    await activity
+      .update({
+        name,
+        description,
+        type,
+        level,
+        team_size,
+        date,
+        location,
+        reg_open,
+        reg_close,
+        contact_name,
+        contact_phone,
+        contact_email,
+        status,
+      })
+      .then((num) => {
+        if (num[0] === 1) {
+          console.log("Activity was updated successfully.");
+          res.status(200).json(activity);
+        } else {
+          console.log(
+            `Cannot update Activity with id=${id}. Maybe Activity was not found or req.body is empty!`
+          );
+        }
+      });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update activity" });
+    console.error("Error updating activity:", error);
+    res
+      .status(500)
+      .json({ message: "Something went wrong while updating the activity" });
   }
 };
-
-// ✅ DELETE
-activityControllers.deleteActivity = async (req, res) => {
+// Delete activity by ID
+activityController.deleteActivity = async (req, res) => {
   try {
     const { id } = req.params;
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({ error: "Activity ID is required" });
+    }
+    // Check if activity exists
     const activity = await Activity.findByPk(id);
-    if (!activity) return res.status(404).json({ error: "Activity not found" });
-
+    if (!activity) {
+      return res.status(404).json({ error: "Activity not found" });
+    }
     await activity.destroy();
-    res.status(200).json({ message: "กิจกรรมถูกลบเรียบร้อยแล้ว" });
+    res.status(204).send();
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete activity" });
+    console.error("Error deleting activity:", error);
+    res
+      .status(500)
+      .json({ message: "Something went wrong while deleting the activity" });
   }
 };
 
-// ✅ SEARCH
-activityControllers.searchActivities = async (req, res) => {
+activityController.searchActivities = async (req, res) => {
   try {
     const { name, type, level, status } = req.query;
     const whereClause = {};
-
-    if (name) whereClause.name = { [Op.iLike]: `%${name}%` };
-    if (type) whereClause.type = type;
-    if (level) whereClause.level = level;
-    if (status) whereClause.status = status;
-
+    if (name) {
+      whereClause.name = { [Op.iLike]: `%${name}%` }; // Case-insensitive search
+    }
+    if (type) {
+      whereClause.type = type;
+    }
+    if (level) {
+      whereClause.level = level;
+    }
+    if (status) {
+      whereClause.status = status;
+    }
     const activities = await Activity.findAll({ where: whereClause });
     res.status(200).json(activities);
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong while searching" });
+    console.error("Error searching activities:", error);
+    res
+      .status(500)
+      .json({ message: "Something went wrong while searching activities" });
   }
 };
 
-export default activityControllers;
+export default activityController;

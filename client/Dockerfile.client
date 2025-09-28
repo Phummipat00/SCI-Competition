@@ -1,5 +1,5 @@
 # ใช้ Node image เป็น base
-FROM node:18
+FROM node:22-alpine
 
 # ตั้ง working directory
 WORKDIR /app
